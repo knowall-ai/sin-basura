@@ -21,57 +21,55 @@ Sin Basura ("Without Trash") is a Nostr-based litter collection rewards program 
 
 [source]
 ----
-                    DONORS
-                      │
-                      │ zap
-                      ▼
-              ┌───────────────┐
-              │   ZAP GOAL    │
-              │  (kind 9041)  │
-              │    FUND       │
-              └───────┬───────┘
-                      │
-                      │ funds available
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     PROGRAM DEFINITION                       │
-│                       (kind 30078)                          │
-│                                                             │
-│  Admin pubkey: npub1abc...                                  │
-│  Rate: 10,000 sats/bag                                      │
-│  Attesters:                                                 │
-│    - npub1carlos... (San Salvador)                          │
-│    - npub1maria...  (La Libertad)                           │
-│    - npub1juan...   (Santa Ana)                             │
-└─────────────────────────────────────────────────────────────┘
-                      │
-        ┌─────────────┼─────────────┐
-        ▼             ▼             ▼
-   COLLECTOR 1   COLLECTOR 2   COLLECTOR 3
-        │             │             │
-        │ posts       │ posts       │ posts
-        ▼             ▼             ▼
-┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│ COLLECTION   │ │ COLLECTION   │ │ COLLECTION   │
-│   PROOF      │ │   PROOF      │ │   PROOF      │
-│  (kind 1)    │ │  (kind 1)    │ │  (kind 1)    │
-└──────┬───────┘ └──────┬───────┘ └──────┬───────┘
-       │                │                │
-       │ attester       │ attester       │ attester
-       │ reviews        │ reviews        │ reviews
-       ▼                ▼                ▼
-┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│ ATTESTATION  │ │ ATTESTATION  │ │ ATTESTATION  │
-│ (kind 1985)  │ │ (kind 1985)  │ │ (kind 1985)  │
-└──────┬───────┘ └──────┬───────┘ └──────────────┘
-       │                │
-       │ payout         │ payout
-       ▼                ▼
-┌──────────────┐ ┌──────────────┐
-│     ZAP      │ │     ZAP      │
-│ (kind 9735)  │ │ (kind 9735)  │
-└──────────────┘ └──────────────┘
+                         DONORS
+                           │
+                           │ zap
+                           ▼
+                   ┌───────────────┐
+                   │   ZAP GOAL    │
+                   │  (kind 9041)  │
+                   │    FUND       │
+                   └───────┬───────┘
+                           │
+           ┌───────────────┼───────────────┐
+           │               │               │
+           ▼               ▼               ▼
+    ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+    │  ATTESTER   │ │  ATTESTER   │ │  ATTESTER   │
+    │   Carlos    │ │   María     │ │    Juan     │
+    │ San Salvador│ │ La Libertad │ │ Santa Ana   │
+    │             │ │             │ │             │
+    │ NWC Access  │ │ NWC Access  │ │ NWC Access  │
+    │ to Fund     │ │ to Fund     │ │ to Fund     │
+    └──────┬──────┘ └──────┬──────┘ └──────┬──────┘
+           │               │               │
+           │ verifies +    │ verifies +    │ verifies +
+           │ zaps          │ zaps          │ zaps
+           ▼               ▼               ▼
+    ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+    │ COLLECTOR 1 │ │ COLLECTOR 2 │ │ COLLECTOR 3 │
+    │             │ │             │ │             │
+    │ Collection  │ │ Collection  │ │ Collection  │
+    │ Proof       │ │ Proof       │ │ Proof       │
+    │ (kind 1)    │ │ (kind 1)    │ │ (kind 1)    │
+    │             │ │             │ │             │
+    │ ⚡ 30k sats │ │ ⚡ 20k sats │ │ ⚡ 10k sats │
+    │ (attester)  │ │ (attester)  │ │ (attester)  │
+    │ ⚡ 5k sats  │ │             │ │ ⚡ 2k sats  │
+    │ (community) │ │             │ │ (tip)       │
+    └─────────────┘ └─────────────┘ └─────────────┘
 ----
+
+=== Attester Role
+
+Attesters are **local program managers** who:
+
+1. **Verify collections** in person
+2. **Pay collectors** via zap from the fund (using NWC)
+3. **Purchase supplies** for collectors (gloves, picker arms, bin bags)
+4. **Build community** and recruit new collectors
+
+Attesters connect to the central fund wallet via Nostr Wallet Connect (NIP-47), giving them spending authority without custody of the full fund.
 
 === Technology Stack
 
@@ -90,6 +88,10 @@ Sin Basura ("Without Trash") is a Nostr-based litter collection rewards program 
 | Operations
 | Nostr events
 | Transparent proof, attestation, payouts
+
+| Wallet Access
+| Nostr Wallet Connect (NIP-47)
+| Attesters access fund wallet for payments and supplies
 
 | Payments
 | Lightning Zaps (NIP-57)
@@ -272,6 +274,8 @@ Posted by an authorized attester to verify a collection.
 
 ==== Successful Verification
 
+The attester posts an attestation AND zaps the collection post. The attestation links to the zap receipt for audit trail.
+
 [source,json]
 ----
 {
@@ -285,13 +289,17 @@ Posted by an authorized attester to verify a collection.
 
     ["e", "<collection_event_id>", "wss://relay.damus.io", "root"],
     ["p", "<collector_pubkey>", "wss://relay.damus.io"],
-    ["a", "30078:<admin_pubkey>:sinbasura-program", "wss://relay.damus.io"]
+    ["a", "30078:<admin_pubkey>:sinbasura-program", "wss://relay.damus.io"],
+
+    ["zap", "<zap_receipt_event_id>", "wss://relay.damus.io"]
   ],
-  "content": "Verified in person at Playa El Tunco. 3 bags confirmed. Area is clean.",
+  "content": "Verified in person at Playa El Tunco. 3 bags confirmed. Zapped 30,000 sats.",
   "id": "<attestation_event_id>",
   "sig": "<signature>"
 }
 ----
+
+The optional `zap` tag links the attestation to the payment receipt, enabling full audit of verification → payment.
 
 ==== Rejection
 
@@ -413,6 +421,82 @@ Achievement badges for collectors.
 └────────────────────────────────────────────────────────────────┘
 ----
 
+=== Nostr Wallet Connect (NWC) Architecture
+
+Attesters access the fund wallet via NIP-47 Nostr Wallet Connect. This allows them to make payments without holding the private keys to the fund.
+
+[source]
+----
+┌─────────────────────────────────────────────────────────────────┐
+│                      FUND WALLET                                │
+│              (LNbits, Alby Hub, etc.)                          │
+│                                                                 │
+│   Balance: 5,000,000 sats                                      │
+│                                                                 │
+│   NWC Connections:                                             │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │ Carlos (San Salvador)                                    │  │
+│   │ - Budget: unlimited (trusted)                           │  │
+│   │ - Permissions: pay_invoice, make_invoice                │  │
+│   │ - Use: collector rewards, supplies                      │  │
+│   ├─────────────────────────────────────────────────────────┤  │
+│   │ María (La Libertad)                                      │  │
+│   │ - Budget: unlimited (trusted)                           │  │
+│   │ - Permissions: pay_invoice, make_invoice                │  │
+│   │ - Use: collector rewards, supplies                      │  │
+│   ├─────────────────────────────────────────────────────────┤  │
+│   │ Juan (Santa Ana)                                         │  │
+│   │ - Budget: unlimited (trusted)                           │  │
+│   │ - Permissions: pay_invoice, make_invoice                │  │
+│   │ - Use: collector rewards, supplies                      │  │
+│   └─────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+----
+
+==== NWC Permissions
+
+[cols="1,2"]
+|===
+| Permission | Use Case
+
+| `pay_invoice`
+| Zap collectors, pay for supplies
+
+| `make_invoice`
+| Receive reimbursements (if needed)
+
+| `get_balance`
+| Check fund balance before large purchases
+
+| `list_transactions`
+| Audit own spending
+|===
+
+==== Fund Uses
+
+Attesters can use their NWC access for:
+
+[cols="1,2,1"]
+|===
+| Category | Examples | Typical Cost
+
+| Collector Rewards
+| Zaps for verified bag collections
+| 10,000 sats/bag
+
+| Supplies
+| Gloves, picker arms, bin bags, high-vis vests
+| 50,000-200,000 sats
+
+| Equipment
+| Branded collection bags, signage
+| 100,000+ sats
+
+| Community Events
+| Cleanup day refreshments, prizes
+| Variable
+|===
+
 === Payout Calculation
 
 [source]
@@ -423,13 +507,25 @@ Example:
 3 bags × 10,000 sats = 30,000 sats
 ----
 
-=== Payout Process
+=== Payout Process (Attester-Initiated)
 
-1. Client queries for verified attestations
-2. For each verified collection, read bags count
-3. Calculate payout amount
-4. Send zap request (kind 9734) to collector's lnurl
-5. Zap receipt (kind 9735) serves as payment proof
+1. Collector posts collection proof (kind 1) with photo and location
+2. Attester meets collector in person to verify
+3. Attester posts attestation (kind 1985) with `verified` label
+4. Attester zaps the collection post from the fund (via NWC)
+5. Collector receives sats instantly to their Lightning address
+6. Zap receipt (kind 9735) serves as payment proof
+
+=== Community Top-ups
+
+Other Nostr users can zap verified collection posts as additional tips:
+
+* Tourists appreciating clean beaches
+* Bitcoiners supporting the cause
+* Local businesses
+* Environmental supporters worldwide
+
+These community zaps provide **bonus income** beyond the base rate, creating viral incentives for impactful collections.
 
 == Client Queries
 
@@ -538,13 +634,16 @@ Example:
 | Term | Definition
 
 | Attester
-| Authorized local verifier who confirms collections in person
+| Authorized local program manager who verifies collections in person, pays collectors via NWC, and purchases supplies
 
 | Collection Proof
 | Nostr event (kind 1) with photo and location evidence
 
 | Attestation
 | Nostr event (kind 1985) from attester verifying a collection
+
+| NWC
+| Nostr Wallet Connect (NIP-47) - protocol allowing apps to access a Lightning wallet remotely
 
 | Zap
 | Bitcoin Lightning payment via Nostr (NIP-57)
@@ -557,11 +656,16 @@ Example:
 
 | Relay
 | Server that stores and distributes Nostr events
+
+| Sats
+| Satoshis - smallest unit of Bitcoin (1 BTC = 100,000,000 sats)
 |===
 
 == References
 
 * https://github.com/nostr-protocol/nips[Nostr Implementation Possibilities (NIPs)]
+* https://github.com/nostr-protocol/nips/blob/master/47.md[NIP-47: Nostr Wallet Connect]
+* https://nwc.dev[Nostr Wallet Connect Documentation]
 * https://geyser.fund[Geyser Fund]
 * https://gov.rootstockcollective.xyz/t/geyser-all-or-nothing-crowdfunding-with-rootstock/401[Geyser All-or-Nothing with Rootstock]
 * https://github.com/hzrd149/blossom[Blossom Media Storage]
