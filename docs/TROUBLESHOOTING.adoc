@@ -1,0 +1,102 @@
+= Sin Basura Troubleshooting Guide
+:toc: left
+:toclevels: 2
+:icons: font
+
+== Common Issues
+
+[cols="2,3"]
+|===
+| Problem | Solution
+
+|
+|
+
+|
+|
+
+|
+|
+
+|
+|
+
+|
+|
+|===
+
+== Collector Issues
+
+[cols="2,3"]
+|===
+| Problem | Solution
+
+|
+|
+
+|
+|
+
+|
+|
+
+|
+|
+|===
+
+== Attester Issues
+
+[cols="2,3"]
+|===
+| Problem | Solution
+
+|
+|
+
+|
+|
+
+|
+|
+
+|
+|
+|===
+
+== Payment Issues
+
+[cols="2,3"]
+|===
+| Problem | Solution
+
+|
+|
+
+|
+|
+
+|
+|
+
+|
+|
+|===
+
+== Relay Issues
+
+[cols="2,3"]
+|===
+| Problem | Solution
+
+|
+|
+
+|
+|
+
+|
+|
+
+|
+|
+|===

@@ -1,0 +1,567 @@
+= Sin Basura Solution Design
+:toc: left
+:toclevels: 3
+:sectnums:
+:icons: font
+
+== Overview
+
+Sin Basura ("Without Trash") is a Nostr-based litter collection rewards program for El Salvador. The system incentivizes community members to collect rubbish by rewarding them with Bitcoin Lightning payments (sats) for verified collections.
+
+=== Key Principles
+
+* **Transparency** - All operations visible on Nostr relays
+* **Decentralization** - No central authority controls the fund
+* **Verifiability** - Local attesters verify collections in person
+* **Instant Payments** - Lightning zaps for immediate rewards
+
+== Architecture
+
+=== System Flow
+
+[source]
+----
+                    DONORS
+                      │
+                      │ zap
+                      ▼
+              ┌───────────────┐
+              │   ZAP GOAL    │
+              │  (kind 9041)  │
+              │    FUND       │
+              └───────┬───────┘
+                      │
+                      │ funds available
+                      ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     PROGRAM DEFINITION                       │
+│                       (kind 30078)                          │
+│                                                             │
+│  Admin pubkey: npub1abc...                                  │
+│  Rate: 10,000 sats/bag                                      │
+│  Attesters:                                                 │
+│    - npub1carlos... (San Salvador)                          │
+│    - npub1maria...  (La Libertad)                           │
+│    - npub1juan...   (Santa Ana)                             │
+└─────────────────────────────────────────────────────────────┘
+                      │
+        ┌─────────────┼─────────────┐
+        ▼             ▼             ▼
+   COLLECTOR 1   COLLECTOR 2   COLLECTOR 3
+        │             │             │
+        │ posts       │ posts       │ posts
+        ▼             ▼             ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│ COLLECTION   │ │ COLLECTION   │ │ COLLECTION   │
+│   PROOF      │ │   PROOF      │ │   PROOF      │
+│  (kind 1)    │ │  (kind 1)    │ │  (kind 1)    │
+└──────┬───────┘ └──────┬───────┘ └──────┬───────┘
+       │                │                │
+       │ attester       │ attester       │ attester
+       │ reviews        │ reviews        │ reviews
+       ▼                ▼                ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│ ATTESTATION  │ │ ATTESTATION  │ │ ATTESTATION  │
+│ (kind 1985)  │ │ (kind 1985)  │ │ (kind 1985)  │
+└──────┬───────┘ └──────┬───────┘ └──────────────┘
+       │                │
+       │ payout         │ payout
+       ▼                ▼
+┌──────────────┐ ┌──────────────┐
+│     ZAP      │ │     ZAP      │
+│ (kind 9735)  │ │ (kind 9735)  │
+└──────────────┘ └──────────────┘
+----
+
+=== Technology Stack
+
+[cols="1,1,2"]
+|===
+| Layer | Technology | Purpose
+
+| Initial Funding
+| Geyser + Rootstock
+| All-or-nothing crowdfunding with smart contract protection
+
+| Ongoing Donations
+| Nostr Zap Goal (NIP-75)
+| Continuous top-ups to the fund
+
+| Operations
+| Nostr events
+| Transparent proof, attestation, payouts
+
+| Payments
+| Lightning Zaps (NIP-57)
+| Instant micropayments to collectors
+
+| Media Storage
+| Blossom (NIP-B7)
+| Decentralized photo proof storage
+|===
+
+== Nostr Event Structures
+
+=== Program Definition (kind 30078)
+
+Defines the Sin Basura program, authorized attesters, and payout rate. Published by the program admin.
+
+[source,json]
+----
+{
+  "kind": 30078,
+  "pubkey": "<admin_pubkey>",
+  "created_at": 1737200000,
+  "tags": [
+    ["d", "sinbasura-program"],
+    ["title", "Sin Basura El Salvador"],
+    ["description", "Litter collection rewards program"],
+    ["image", "https://sinbasura.sv/logo.png"],
+
+    ["attester", "<carlos_pubkey>", "wss://relay.damus.io", "Carlos - San Salvador"],
+    ["attester", "<maria_pubkey>", "wss://nos.lol", "María - La Libertad"],
+    ["attester", "<juan_pubkey>", "wss://relay.damus.io", "Juan - Santa Ana"],
+
+    ["rate", "10000", "bag"],
+    ["fund", "9041:<admin_pubkey>:<fund_d_tag>", "wss://relay.damus.io"],
+
+    ["geyser", "https://geyser.fund/project/sinbasura", "all-or-nothing"],
+    ["geyser-goal", "5000000", "sats"],
+
+    ["relay", "wss://relay.damus.io"],
+    ["relay", "wss://nos.lol"],
+
+    ["t", "sinbasura"],
+    ["t", "elsalvador"],
+    ["L", "sv.sinbasura"]
+  ],
+  "content": "Sin Basura is a community litter collection program in El Salvador. Collectors earn 10,000 sats per verified bag of rubbish collected. Local attesters verify collections in person.",
+  "id": "<event_id>",
+  "sig": "<signature>"
+}
+----
+
+==== Tag Definitions
+
+[cols="1,2,1"]
+|===
+| Tag | Description | Required
+
+| `d`
+| Unique identifier for addressable event
+| Yes
+
+| `attester`
+| Authorized verifier pubkey, relay, name
+| Yes (1+)
+
+| `rate`
+| Millisats per unit (e.g., 10000 sats per bag)
+| Yes
+
+| `fund`
+| Reference to the Zap Goal event
+| Yes
+
+| `geyser`
+| Geyser campaign URL
+| No
+
+| `relay`
+| Recommended relays for the program
+| Yes (1+)
+|===
+
+=== Zap Goal / Fund (kind 9041)
+
+The crowdfunding pool. Donors zap this event to contribute.
+
+[source,json]
+----
+{
+  "kind": 9041,
+  "pubkey": "<admin_pubkey>",
+  "created_at": 1737200000,
+  "tags": [
+    ["d", "sinbasura-fund-2025"],
+    ["relays", "wss://relay.damus.io", "wss://nos.lol"],
+    ["amount", "10000000000"],
+    ["image", "https://sinbasura.sv/fund-banner.jpg"],
+    ["summary", "Fund litter collection rewards in El Salvador - 10,000 sats per bag"],
+    ["t", "sinbasura"],
+    ["L", "sv.sinbasura"],
+    ["l", "fund", "sv.sinbasura"]
+  ],
+  "content": "Sin Basura Fund\n\nHelp us reward Salvadorans for cleaning up their communities!\n\n1 bag of rubbish = 10,000 sats\n\nAll collections verified by local attesters. 100% of zaps go to collectors.",
+  "id": "<event_id>",
+  "sig": "<signature>"
+}
+----
+
+=== Collection Proof (kind 1)
+
+Posted by the collector with photo evidence and location.
+
+[source,json]
+----
+{
+  "kind": 1,
+  "pubkey": "<collector_pubkey>",
+  "created_at": 1737210000,
+  "tags": [
+    ["t", "sinbasura"],
+    ["t", "elsalvador"],
+    ["t", "playaeltunco"],
+
+    ["L", "sv.sinbasura"],
+    ["l", "collection", "sv.sinbasura"],
+    ["l", "pending", "sv.sinbasura.status"],
+
+    ["location", "13.4967,-89.3833", "Playa El Tunco, La Libertad"],
+    ["bags", "3"],
+
+    ["imeta",
+      "url https://blossom.sinbasura.sv/proof-abc123.jpg",
+      "m image/jpeg",
+      "dim 1920x1080",
+      "x <sha256_hash>"
+    ],
+
+    ["a", "30078:<admin_pubkey>:sinbasura-program", "wss://relay.damus.io"]
+  ],
+  "content": "Collected 3 bags of rubbish at Playa El Tunco this morning! Beach is looking much cleaner now.\n\n#sinbasura #elsalvador",
+  "id": "<collection_event_id>",
+  "sig": "<signature>"
+}
+----
+
+==== Collection Proof Tags
+
+[cols="1,2,1"]
+|===
+| Tag | Description | Required
+
+| `t`
+| Hashtags including `sinbasura`
+| Yes
+
+| `l` (status)
+| Status label: `pending`, `verified`, `rejected`
+| Yes
+
+| `location`
+| GPS coordinates and place name
+| Yes
+
+| `bags`
+| Number of bags collected
+| Yes
+
+| `imeta`
+| Photo metadata (NIP-92)
+| Yes
+
+| `a`
+| Reference to program definition
+| Yes
+|===
+
+=== Attestation (kind 1985)
+
+Posted by an authorized attester to verify a collection.
+
+==== Successful Verification
+
+[source,json]
+----
+{
+  "kind": 1985,
+  "pubkey": "<attester_pubkey>",
+  "created_at": 1737215000,
+  "tags": [
+    ["L", "sv.sinbasura.verification"],
+    ["l", "verified", "sv.sinbasura.verification"],
+    ["l", "3", "sv.sinbasura.bags"],
+
+    ["e", "<collection_event_id>", "wss://relay.damus.io", "root"],
+    ["p", "<collector_pubkey>", "wss://relay.damus.io"],
+    ["a", "30078:<admin_pubkey>:sinbasura-program", "wss://relay.damus.io"]
+  ],
+  "content": "Verified in person at Playa El Tunco. 3 bags confirmed. Area is clean.",
+  "id": "<attestation_event_id>",
+  "sig": "<signature>"
+}
+----
+
+==== Rejection
+
+[source,json]
+----
+{
+  "kind": 1985,
+  "pubkey": "<attester_pubkey>",
+  "created_at": 1737215000,
+  "tags": [
+    ["L", "sv.sinbasura.verification"],
+    ["l", "rejected", "sv.sinbasura.verification"],
+    ["l", "duplicate", "sv.sinbasura.rejection-reason"],
+
+    ["e", "<collection_event_id>", "wss://relay.damus.io"],
+    ["p", "<collector_pubkey>"]
+  ],
+  "content": "Rejected: This appears to be a duplicate submission from yesterday.",
+  "id": "<event_id>",
+  "sig": "<signature>"
+}
+----
+
+==== Rejection Reasons
+
+[cols="1,2"]
+|===
+| Label | Description
+
+| `duplicate`
+| Same collection submitted multiple times
+
+| `insufficient-proof`
+| Photo does not clearly show collection
+
+| `location-mismatch`
+| GPS coordinates don't match photo
+
+| `fraudulent`
+| Evidence of fraud or manipulation
+
+| `not-found`
+| Collection not found at location
+|===
+
+=== Badge Definition (kind 30009)
+
+Achievement badges for collectors.
+
+[source,json]
+----
+{
+  "kind": 30009,
+  "pubkey": "<admin_pubkey>",
+  "tags": [
+    ["d", "primera-limpieza"],
+    ["name", "Primera Limpieza"],
+    ["description", "Completed first verified litter collection with Sin Basura"],
+    ["image", "https://sinbasura.sv/badges/primera-limpieza.png"],
+    ["thumb", "https://sinbasura.sv/badges/primera-limpieza-256.png", "256x256"]
+  ],
+  "content": "",
+  "id": "<event_id>",
+  "sig": "<signature>"
+}
+----
+
+==== Badge Definitions
+
+[cols="1,1,2"]
+|===
+| d tag | Name | Criteria
+
+| `primera-limpieza`
+| Primera Limpieza
+| First verified collection
+
+| `diez-bolsas`
+| Diez Bolsas
+| 10 bags collected
+
+| `cien-bolsas`
+| Cien Bolsas
+| 100 bags collected
+
+| `playa-limpia`
+| Playa Limpia
+| Beach cleanup specialist
+
+| `lider-comunidad`
+| Líder de Comunidad
+| Brought 5+ new collectors
+|===
+
+== Funding Model
+
+=== Dual Pool Architecture
+
+[source]
+----
+┌────────────────────────────────────────────────────────────────┐
+│                    GEYSER ALL-OR-NOTHING                       │
+│                    (Initial Launch Fund)                       │
+│                                                                │
+│   Goal: 5,000,000 sats                                        │
+│   = 500 bags of rubbish collection                            │
+│                                                                │
+│   If goal met: Program launches with guaranteed runway        │
+│   If goal missed: All donors refunded automatically           │
+└────────────────────────────────────────────────────────────────┘
+                              +
+┌────────────────────────────────────────────────────────────────┐
+│                    NOSTR ZAP GOAL (NIP-75)                     │
+│                    (Ongoing Operations Fund)                   │
+│                                                                │
+│   Continuous donations via Nostr zaps                         │
+│   No minimum, no deadline                                     │
+│   Transparent balance visible to all                          │
+└────────────────────────────────────────────────────────────────┘
+----
+
+=== Payout Calculation
+
+[source]
+----
+Verified bags × Rate = Payout
+
+Example:
+3 bags × 10,000 sats = 30,000 sats
+----
+
+=== Payout Process
+
+1. Client queries for verified attestations
+2. For each verified collection, read bags count
+3. Calculate payout amount
+4. Send zap request (kind 9734) to collector's lnurl
+5. Zap receipt (kind 9735) serves as payment proof
+
+== Client Queries
+
+=== Find All Pending Collections
+
+[source,json]
+----
+{
+  "kinds": [1],
+  "#t": ["sinbasura"],
+  "#l": ["pending"]
+}
+----
+
+=== Find Attestations for a Collection
+
+[source,json]
+----
+{
+  "kinds": [1985],
+  "#e": ["<collection_event_id>"],
+  "#L": ["sv.sinbasura.verification"]
+}
+----
+
+=== Find All Verified Collections by a Collector
+
+[source,json]
+----
+{
+  "kinds": [1985],
+  "#p": ["<collector_pubkey>"],
+  "#l": ["verified"]
+}
+----
+
+=== Find Program Attesters
+
+[source,json]
+----
+{
+  "kinds": [30078],
+  "#d": ["sinbasura-program"],
+  "authors": ["<admin_pubkey>"]
+}
+----
+
+=== Count Total Verified Bags
+
+[source,json]
+----
+{
+  "kinds": [1985],
+  "#L": ["sv.sinbasura.verification"],
+  "#l": ["verified"]
+}
+----
+
+== Relay Configuration
+
+=== Recommended Relays
+
+[cols="1,2"]
+|===
+| Relay | Purpose
+
+| `wss://relay.damus.io`
+| Primary relay
+
+| `wss://nos.lol`
+| Secondary relay
+
+| `wss://relay.geyser.fund`
+| Geyser integration
+
+| `wss://relay.sinbasura.sv`
+| Program-specific relay (future)
+|===
+
+== Security Considerations
+
+=== Attester Verification
+
+* Only pubkeys listed in the Program Definition can create valid attestations
+* Clients MUST verify attester pubkey against program definition
+* Invalid attestations should be ignored
+
+=== Anti-Fraud Measures
+
+* GPS coordinates required in collection proofs
+* Photo metadata (EXIF) can be verified
+* Attesters verify in person
+* Rate limiting on collections per day per collector
+* Community reporting of suspicious activity
+
+=== Fund Security
+
+* Initial funds protected by Rootstock smart contract
+* Ongoing fund controlled by multi-sig (future)
+* All transactions visible on Nostr and Lightning
+
+== Glossary
+
+[cols="1,2"]
+|===
+| Term | Definition
+
+| Attester
+| Authorized local verifier who confirms collections in person
+
+| Collection Proof
+| Nostr event (kind 1) with photo and location evidence
+
+| Attestation
+| Nostr event (kind 1985) from attester verifying a collection
+
+| Zap
+| Bitcoin Lightning payment via Nostr (NIP-57)
+
+| Zap Goal
+| Crowdfunding target event (kind 9041, NIP-75)
+
+| Pubkey
+| Nostr public key identifying a user
+
+| Relay
+| Server that stores and distributes Nostr events
+|===
+
+== References
+
+* https://github.com/nostr-protocol/nips[Nostr Implementation Possibilities (NIPs)]
+* https://geyser.fund[Geyser Fund]
+* https://gov.rootstockcollective.xyz/t/geyser-all-or-nothing-crowdfunding-with-rootstock/401[Geyser All-or-Nothing with Rootstock]
+* https://github.com/hzrd149/blossom[Blossom Media Storage]
