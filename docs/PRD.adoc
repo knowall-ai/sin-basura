@@ -1,0 +1,534 @@
+= Sin Basura Product Requirements Document
+:toc: left
+:toclevels: 3
+:sectnums:
+:icons: font
+
+== Executive Summary
+
+Sin Basura ("Without Trash") is a community-driven litter collection program for El Salvador that rewards participants with Bitcoin via Lightning payments. The program uses the Nostr protocol for transparent operations and Geyser for trustless crowdfunding.
+
+=== Vision
+
+A cleaner El Salvador powered by Bitcoin incentives and decentralized verification.
+
+=== Mission
+
+To incentivize and reward community members for collecting litter, creating both environmental impact and economic opportunity through Bitcoin micropayments.
+
+== Problem Statement
+
+=== Environmental Challenge
+
+El Salvador faces significant litter and waste management challenges, particularly in tourist areas, beaches, and urban communities. Traditional cleanup programs rely on:
+
+* Volunteer goodwill (unsustainable)
+* Government funding (limited and bureaucratic)
+* NGO programs (dependent on grants)
+
+=== Economic Opportunity
+
+Many Salvadorans, particularly in rural and coastal areas, have:
+
+* Limited formal employment opportunities
+* Access to Bitcoin/Lightning via the Chivo wallet and other apps
+* Time and willingness to participate in community improvement
+
+=== Trust Problem
+
+Previous incentive programs have struggled with:
+
+* Fraud and fake submissions
+* Centralized fund management (corruption risk)
+* Lack of transparency in fund distribution
+* Delayed or missing payments
+
+== Solution
+
+Sin Basura addresses these challenges through:
+
+[cols="1,2"]
+|===
+| Challenge | Solution
+
+| Sustainability
+| Bitcoin incentives create ongoing motivation
+
+| Verification
+| Local attesters verify collections in person
+
+| Trust
+| All transactions visible on Nostr; funds protected by smart contracts
+
+| Payments
+| Instant Lightning zaps upon verification
+
+| Transparency
+| Every collection, attestation, and payment is a public Nostr event
+|===
+
+== Target Users
+
+=== Collectors
+
+**Who:** Community members who collect litter
+
+**Demographics:**
+
+* Age: 16-65
+* Location: El Salvador (initially coastal and urban areas)
+* Tech: Smartphone with Nostr client and Lightning wallet
+
+**Needs:**
+
+* Earn income for productive work
+* Simple submission process
+* Fast, reliable payments
+* Recognition for contributions
+
+**User Journey:**
+
+1. Download Nostr client (Damus, Amethyst, Primal)
+2. Set up Lightning address (Wallet of Satoshi, Blink, Alby)
+3. Find litter in community
+4. Collect into bags
+5. Take photo with location
+6. Post to Nostr with `#sinbasura` tag
+7. Wait for attester verification
+8. Receive sats instantly
+
+=== Attesters
+
+**Who:** Trusted local verifiers who confirm collections
+
+**Demographics:**
+
+* Age: 25-55
+* Location: Specific regions of El Salvador
+* Reputation: Known community members, business owners, or local leaders
+
+**Needs:**
+
+* Clear verification criteria
+* Simple attestation process
+* Recognition for service
+* Possible compensation (future)
+
+**Responsibilities:**
+
+* Verify collections in person when possible
+* Check photo evidence for authenticity
+* Reject fraudulent submissions
+* Report suspicious patterns
+
+=== Donors
+
+**Who:** Individuals and organizations funding the program
+
+**Demographics:**
+
+* Bitcoiners worldwide
+* Environmental organizations
+* El Salvador tourism businesses
+* Corporate social responsibility programs
+
+**Needs:**
+
+* Assurance funds are used properly
+* Transparency on impact
+* Tax documentation (future)
+* Recognition for contributions
+
+**Contribution Methods:**
+
+* Geyser All-or-Nothing campaign (smart contract protection)
+* Direct Nostr zaps to the Zap Goal
+* Corporate sponsorship (future)
+
+== Requirements
+
+=== Functional Requirements
+
+==== FR-1: Program Definition
+
+[cols="1,3,1"]
+|===
+| ID | Requirement | Priority
+
+| FR-1.1
+| Admin can publish program definition with attester list
+| Must
+
+| FR-1.2
+| Admin can update attester list without disrupting operations
+| Must
+
+| FR-1.3
+| Admin can adjust reward rate
+| Should
+
+| FR-1.4
+| Program definition includes relay list for discovery
+| Must
+|===
+
+==== FR-2: Collection Submission
+
+[cols="1,3,1"]
+|===
+| ID | Requirement | Priority
+
+| FR-2.1
+| Collector can submit photo proof via Nostr
+| Must
+
+| FR-2.2
+| Submission includes GPS coordinates
+| Must
+
+| FR-2.3
+| Submission includes bag count
+| Must
+
+| FR-2.4
+| Submission is tagged with `#sinbasura`
+| Must
+
+| FR-2.5
+| Submission status is visible (pending/verified/rejected)
+| Should
+|===
+
+==== FR-3: Attestation
+
+[cols="1,3,1"]
+|===
+| ID | Requirement | Priority
+
+| FR-3.1
+| Attester can verify a collection via NIP-32 label
+| Must
+
+| FR-3.2
+| Attester can reject a collection with reason
+| Must
+
+| FR-3.3
+| Only authorized attesters can create valid attestations
+| Must
+
+| FR-3.4
+| Attestation includes verified bag count
+| Must
+|===
+
+==== FR-4: Payments
+
+[cols="1,3,1"]
+|===
+| ID | Requirement | Priority
+
+| FR-4.1
+| Verified collections trigger zap payment
+| Must
+
+| FR-4.2
+| Payment amount equals bags × rate
+| Must
+
+| FR-4.3
+| Payment is recorded as Nostr zap receipt
+| Must
+
+| FR-4.4
+| Collector receives payment to their Lightning address
+| Must
+|===
+
+==== FR-5: Fundraising
+
+[cols="1,3,1"]
+|===
+| ID | Requirement | Priority
+
+| FR-5.1
+| Geyser campaign with all-or-nothing protection
+| Must
+
+| FR-5.2
+| Nostr Zap Goal for ongoing donations
+| Should
+
+| FR-5.3
+| Transparent fund balance visible to all
+| Must
+|===
+
+==== FR-6: Badges & Recognition
+
+[cols="1,3,1"]
+|===
+| ID | Requirement | Priority
+
+| FR-6.1
+| Badge definitions for achievements
+| Should
+
+| FR-6.2
+| Automatic badge awards at milestones
+| Could
+
+| FR-6.3
+| Leaderboard of top collectors
+| Could
+|===
+
+=== Non-Functional Requirements
+
+[cols="1,3,1"]
+|===
+| ID | Requirement | Priority
+
+| NFR-1
+| System operates without central server (relay-based)
+| Must
+
+| NFR-2
+| All data publicly auditable on Nostr
+| Must
+
+| NFR-3
+| Payments processed within 1 minute of verification
+| Should
+
+| NFR-4
+| Support for Spanish and English
+| Should
+
+| NFR-5
+| Mobile-friendly submission process
+| Must
+|===
+
+== Success Metrics
+
+=== Impact Metrics
+
+[cols="1,2,1"]
+|===
+| Metric | Description | Target (Year 1)
+
+| Bags Collected
+| Total verified bags of litter
+| 10,000 bags
+
+| Active Collectors
+| Unique collectors with ≥1 verified collection
+| 500 people
+
+| Areas Covered
+| Distinct locations with collections
+| 50 communities
+
+| Repeat Collectors
+| Collectors with ≥5 collections
+| 200 people
+|===
+
+=== Financial Metrics
+
+[cols="1,2,1"]
+|===
+| Metric | Description | Target (Year 1)
+
+| Funds Raised
+| Total sats raised via Geyser + Zaps
+| 100,000,000 sats (~$1,000)
+
+| Funds Distributed
+| Total sats paid to collectors
+| 95,000,000 sats (95%)
+
+| Cost per Bag
+| Average cost including overhead
+| 10,500 sats
+
+| Donor Retention
+| Donors who contribute multiple times
+| 30%
+|===
+
+=== Operational Metrics
+
+[cols="1,2,1"]
+|===
+| Metric | Description | Target
+
+| Verification Time
+| Time from submission to attestation
+| < 24 hours
+
+| Fraud Rate
+| Rejected submissions / total submissions
+| < 5%
+
+| Payment Success
+| Successful zaps / attempted zaps
+| > 99%
+
+| Attester Coverage
+| Regions with active attesters
+| 10 departments
+|===
+
+== MVP Scope
+
+=== In Scope (Phase 1)
+
+* Program definition on Nostr (kind 30078)
+* Collection proof submission (kind 1 with labels)
+* Attester verification (kind 1985)
+* Manual zap payouts by admin
+* Geyser crowdfunding campaign
+* Basic web interface for viewing collections
+
+=== Out of Scope (Future Phases)
+
+* Automated payout system
+* Mobile app
+* Attester compensation
+* Corporate sponsorship portal
+* Multi-country expansion
+* Carbon credit integration
+
+== Roadmap
+
+=== Phase 1: Launch (Months 1-2)
+
+* [ ] Register sinbasura.sv domain
+* [ ] Create Geyser All-or-Nothing campaign
+* [ ] Publish program definition to Nostr
+* [ ] Recruit 3-5 initial attesters
+* [ ] Onboard 20 pilot collectors
+* [ ] Process first 100 verified collections
+
+=== Phase 2: Growth (Months 3-6)
+
+* [ ] Expand to 10 attester regions
+* [ ] Build simple web dashboard
+* [ ] Reach 1,000 verified collections
+* [ ] Implement badge system
+* [ ] Launch ongoing Zap Goal fund
+
+=== Phase 3: Scale (Months 7-12)
+
+* [ ] Semi-automated payout system
+* [ ] Mobile-optimized submission flow
+* [ ] Attester compensation program
+* [ ] Corporate sponsorship partnerships
+* [ ] Reach 10,000 verified collections
+
+=== Phase 4: Expand (Year 2+)
+
+* [ ] Expand to Guatemala, Honduras
+* [ ] Integration with recycling programs
+* [ ] Carbon credit marketplace
+* [ ] Fully automated operations
+
+== Risks & Mitigations
+
+[cols="1,2,2,1"]
+|===
+| Risk | Description | Mitigation | Severity
+
+| Fraud
+| Fake submissions, recycled photos
+| In-person attestation, photo metadata verification, rate limiting
+| High
+
+| Attester Collusion
+| Attesters approving fake collections
+| Multiple attesters per region, reputation tracking, audits
+| Medium
+
+| Fund Depletion
+| More collections than funds available
+| Real-time balance visibility, pause when low, continuous fundraising
+| Medium
+
+| Low Adoption
+| Collectors don't participate
+| Marketing, community outreach, competitive rates
+| Medium
+
+| Technical Failure
+| Relay downtime, payment failures
+| Multiple relays, retry logic, manual fallback
+| Low
+|===
+
+== Related Documents
+
+* link:SOLUTION_DESIGN.adoc[Solution Design] - Technical architecture and Nostr event structures
+* link:TROUBLESHOOTING.adoc[Troubleshooting] - Common issues and solutions
+
+== Glossary
+
+[cols="1,2"]
+|===
+| Term | Definition
+
+| Attester
+| Authorized local verifier who confirms litter collections in person
+
+| Collector
+| Community member who picks up litter and submits proof
+
+| Nostr
+| Decentralized protocol for social networking and messaging
+
+| Zap
+| Bitcoin Lightning payment sent via Nostr
+
+| Zap Goal
+| Crowdfunding target on Nostr (NIP-75)
+
+| NIP
+| Nostr Implementation Possibility (protocol specification)
+
+| Pubkey
+| Nostr public key identifying a user
+
+| Relay
+| Server that stores and distributes Nostr events
+
+| Sats
+| Satoshis, the smallest unit of Bitcoin (1 BTC = 100,000,000 sats)
+|===
+
+== Appendix: Competitive Analysis
+
+[cols="1,2,2,2"]
+|===
+| Program | Model | Pros | Cons
+
+| Traditional Cleanup Days
+| Volunteer events
+| Community building, no cost
+| Unsustainable, infrequent
+
+| Government Programs
+| Paid cleanup crews
+| Reliable funding
+| Bureaucratic, limited reach
+
+| Plastic Bank
+| Exchange plastic for goods
+| Proven model
+| Requires physical locations
+
+| **Sin Basura**
+| Bitcoin rewards via Nostr
+| Instant payments, transparent, scalable
+| Requires crypto adoption
+|===
