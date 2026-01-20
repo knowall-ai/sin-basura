@@ -4,13 +4,17 @@
       font-family: monospace;
       font-size: 14px;
       font-weight: bold;
-      fill: #84cc16;
     }
+    .blue { fill: #0047AB; }
+    .white { fill: #FFFFFF; }
   </style>
-  <text x="10" y="20" xml:space="preserve">███████╗██╗███╗   ██╗    ██████╗  █████╗ ███████╗██╗   ██╗██████╗  █████╗ </text>
-  <text x="10" y="36" xml:space="preserve">██╔════╝██║████╗  ██║    ██╔══██╗██╔══██╗██╔════╝██║   ██║██╔══██╗██╔══██╗</text>
-  <text x="10" y="52" xml:space="preserve">███████╗██║██╔██╗ ██║    ██████╔╝███████║███████╗██║   ██║██████╔╝███████║</text>
-  <text x="10" y="68" xml:space="preserve">╚════██║██║██║╚██╗██║    ██╔══██╗██╔══██║╚════██║██║   ██║██╔══██╗██╔══██║</text>
-  <text x="10" y="84" xml:space="preserve">███████║██║██║ ╚████║    ██████╔╝██║  ██║███████║╚██████╔╝██║  ██║██║  ██║</text>
-  <text x="10" y="100" xml:space="preserve">╚══════╝╚═╝╚═╝  ╚═══╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝</text>
+  <!-- Top blue stripe -->
+  <text x="10" y="20" class="blue" xml:space="preserve">███████╗██╗███╗   ██╗    ██████╗  █████╗ ███████╗██╗   ██╗██████╗  █████╗ </text>
+  <text x="10" y="36" class="blue" xml:space="preserve">██╔════╝██║████╗  ██║    ██╔══██╗██╔══██╗██╔════╝██║   ██║██╔══██╗██╔══██╗</text>
+  <!-- Middle white stripe -->
+  <text x="10" y="52" class="white" xml:space="preserve">███████╗██║██╔██╗ ██║    ██████╔╝███████║███████╗██║   ██║██████╔╝███████║</text>
+  <text x="10" y="68" class="white" xml:space="preserve">╚════██║██║██║╚██╗██║    ██╔══██╗██╔══██║╚════██║██║   ██║██╔══██╗██╔══██║</text>
+  <!-- Bottom blue stripe -->
+  <text x="10" y="84" class="blue" xml:space="preserve">███████║██║██║ ╚████║    ██████╔╝██║  ██║███████║╚██████╔╝██║  ██║██║  ██║</text>
+  <text x="10" y="100" class="blue" xml:space="preserve">╚══════╝╚═╝╚═╝  ╚═══╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝</text>
 </svg>
