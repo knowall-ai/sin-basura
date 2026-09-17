@@ -4,6 +4,8 @@
   <img alt="Sin Basura" src="assets/logo.svg" width="600">
 </picture>
 
+[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/knowall-ai/sin-basura?label=CodeRabbit+Reviews&labelColor=171717&color=FF570A)](https://coderabbit.ai)
+
 **Nostr-based litter collection rewards program for El Salvador**
 
 Sin Basura ("Without Trash") is a community-driven initiative that rewards people for collecting litter using Bitcoin Lightning payments via Nostr.
